@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="MS College Campus Events & Workshop Management System" />
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/ms-favicon.png') }}" />
+  <title>{% block title %}MS College Events{% endblock %}</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}" />
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- ── Navbar ── -->
+  <nav class="navbar" id="mainNavbar">
+    {% if session.get('user_id') %}<button class="nav-back-button" type="button" onclick="if (history.length > 1) history.back(); else location.href='{{ url_for('admin.dashboard') if session.get('user_role') == 'admin' else (url_for('staff.dashboard') if session.get('user_role') == 'staff' else url_for('participant.dashboard')) }}'" aria-label="Go back" title="Go back"><i class="fa-solid fa-arrow-left"></i></button>{% endif %}
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch light and dark theme" title="Switch theme">
+      <i class="fa-solid fa-sun"></i>
+    </button>
+    {% if not session.get('user_id') and request.endpoint != 'index' %}<a href="{{ url_for('index') }}" class="navbar-brand msv-brand">
+      <img class="college-logo" src="{{ url_for('static', filename='images/ms-college-logo.png') }}" alt="MS College crest">
+      <div class="brand-copy">
+        <strong>MS COLLEGE</strong>
+        <span>Virudhunagar, 626001</span>
+      </div>
+    </a>{% endif %}
+
+    <!-- Hamburger (mobile) -->
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Nav Links -->
+    <div class="navbar-nav" id="navbarNav">
+      {% if not session.get('user_id') or session.get('user_role') == 'participant' %}
+      <a href="{{ url_for('index') }}" class="nav-link" data-i18n="nav.home">Home</a>
+      {% endif %}
+      {% if session.get('user_id') %}<a href="{{ url_for('auth.profile') }}" class="nav-link">My Profile</a>{% endif %}
+
+      {% if session.get('user_id') %}
+        {% if session.get('user_role') == 'admin' %}
+          <a href="{{ url_for('admin.dashboard') }}"      class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
+          <a href="{{ url_for('admin.create_event') }}"   class="nav-link" data-i18n="admin.createEvent">Create Event</a>
+          <a href="{{ url_for('admin.events_list') }}"  class="nav-link" data-i18n="admin.manageEvents">Manage Events</a>
+          <a href="{{ url_for('admin.staff_requests') }}" class="nav-link" data-i18n="admin.staffRequests">Staff Requests</a>
+          <a href="{{ url_for('admin.reports') }}" class="nav-link">Marks &amp; Results</a>
+          <a href="{{ url_for('events.all_leaderboards') }}" class="nav-link">Leaderboards</a>
+        {% elif session.get('user_role') == 'staff' %}
+          <a href="{{ url_for('staff.dashboard') }}"      class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
+          <a href="{{ url_for('staff.dashboard') }}"      class="nav-link" data-i18n="staff.myEvents">My Events</a>
+          <a href="{{ url_for('events.public_events') }}" class="nav-link">Events</a>
+          <a href="{{ url_for('events.all_leaderboards') }}" class="nav-link">Leaderboards</a>
+        {% else %}
+          <a href="{{ url_for('events.public_events') }}" class="nav-link">Events</a>
+          <a href="{{ url_for('participant.dashboard') }}"       class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
+          <a href="{{ url_for('participant.my_registrations') }}" class="nav-link" data-i18n="nav.myRegistrations">My Registrations</a>
+          <a href="{{ url_for('participant.my_certificates') }}"    class="nav-link" data-i18n="nav.certificates">Certificates</a>
+          <a href="{{ url_for('participant.notifications') }}" class="nav-link nav-notifications">Notifications{% if unread_notifications_count|default(0) > 0 %}<span class="notification-dot" aria-label="Unread notifications">{{ unread_notifications_count if unread_notifications_count < 100 else '99+' }}</span>{% endif %}</a>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('auth.login') }}"    class="nav-link" data-i18n="nav.login">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="nav-link" data-i18n="nav.register">Register</a>
+      {% endif %}
+    </div>
+
+    <!-- Right section -->
+    <div class="navbar-right">
+      <!-- Language Toggle -->
+      <button class="lang-toggle" title="Switch Language" aria-label="Switch language">தமிழ் / English</button>
+
+      {% if session.get('user_id') %}
+        <div class="navbar-user">
+          <a class="nav-profile-link" href="{{ url_for('auth.profile') }}" aria-label="My profile">
+          {% if session.get('profile_image') %}
+            <img class="user-avatar user-avatar-image" src="{{ url_for('static', filename='uploads/profiles/' + session.get('profile_image')) }}" alt="Profile picture">
+          {% else %}
+            <span class="user-avatar">{{ session.get('user_name', 'U')[0].upper() }}</span>
+          {% endif %}</a>
+          <div>
+            <div class="user-name">{{ session.get('user_name', 'User') }}</div>
+            <div class="user-role" style="text-transform:capitalize;">{{ session.get('user_role', 'participant') }}</div>
+          </div>
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm" style="margin-left:8px;" data-i18n="nav.logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </a>
+        </div>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}"    class="btn btn-ghost btn-sm"    data-i18n="nav.login">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm"  data-i18n="nav.register">Register</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- College-branded, lightweight page transition loader -->
+  <div class="msv-page-loader" id="msvPageLoader" aria-hidden="true">
+    <div class="msv-loader-orbit"><img src="{{ url_for('static', filename='images/ms-college-logo.png') }}" alt=""></div>
+    <span>MS COLLEGE</span><small>Loading campus events</small>
+  </div>
+
+  <!-- ── Flash Messages ── -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container" id="flashContainer">
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">
+            <i class="fa-solid
+              {% if category == 'success' %}fa-circle-check
+              {% elif category == 'danger' or category == 'error' %}fa-circle-xmark
+              {% elif category == 'warning' %}fa-triangle-exclamation
+              {% else %}fa-circle-info{% endif %}
+              flash-icon"></i>
+            <span class="flash-text">{{ message }}</span>
+            <button class="flash-close"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Sidebar mobile overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ── Page Content ── -->
+  {% block content %}{% endblock %}
+
+  <!-- ── AI Chatbot Floating Widget ── -->
+  {% if session.get('user_id') %}
+  <button class="ai-chat-toggle" id="aiChatToggle" aria-label="Open AI Chat">
+    <i class="fa-solid fa-robot"></i>
+  </button>
+
+  <div class="ai-chat-window" id="aiChatWindow">
+    <div class="ai-chat-header">
+      <div class="ai-chat-header-info">
+        <div class="ai-chat-avatar">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div>
+          <div class="ai-chat-title" data-i18n="ai.title">AI Assistant</div>
+          <div class="ai-chat-status">
+            <i class="fa-solid fa-circle" style="font-size:0.5rem;color:#2ecc71"></i>
+            <span data-i18n="ai.online">Online</span>
+          </div>
+        </div>
+      </div>
+      <div class="ai-chat-header-actions">
+        <button class="ai-chat-btn" id="aiChatClear" data-i18n-title="ai.clearChat" title="Clear chat">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+        <button class="ai-chat-btn" id="aiChatClose" title="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="ai-messages" id="aiMessages"></div>
+
+    <div class="ai-chat-input-area">
+      <input
+        type="text"
+        class="ai-chat-input"
+        id="aiChatInput"
+        data-i18n-placeholder="ai.placeholder"
+        placeholder="Ask me anything about events..."
+        maxlength="500"
+        autocomplete="off"
+      />
+      <button class="ai-send-btn" id="aiChatSend" data-i18n-title="ai.send" title="Send">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Pass user context to JS -->
+  <script>
+    window.currentUserId   = {{ session.get('user_id') | tojson }};
+    window.currentUserName = {{ session.get('user_name', '') | tojson }};
+    window.currentUserRole = {{ session.get('user_role', 'participant') | tojson }};
+  </script>
+  {% endif %}
+
+  <!-- ── Scripts ── -->
+  <script>
+    (() => {
+      const html = document.documentElement;
+      const saved = localStorage.getItem('msv-theme') || 'dark';
+      html.setAttribute('data-theme', saved);
+      const updateIcon = () => {
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.innerHTML = html.getAttribute('data-theme') === 'dark'
+          ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+      };
+      const loader = document.getElementById('msvPageLoader');
+      const hideLoader = () => { if (loader) { loader.classList.add('is-hidden'); window.setTimeout(() => loader.remove(), 450); } };
+      window.addEventListener('load', hideLoader, { once: true });
+      window.setTimeout(hideLoader, 1800);
+      document.addEventListener('DOMContentLoaded', () => {
+        updateIcon();
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.addEventListener('click', () => {
+          const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+          html.setAttribute('data-theme', next);
+          localStorage.setItem('msv-theme', next);
+          updateIcon();
+        });
+      });
+    })();
+  </script>
+  <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% if session.get('user_id') %}
+    <script src="{{ url_for('static', filename='js/ai-chat.js') }}"></script>
+  {% endif %}
+  {% block extra_js %}{% endblock %}
+
+</body>
+</html>

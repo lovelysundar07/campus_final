@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block title %}{{ event.title }} – Staff Panel{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="sidebar" id="adminSidebar">
+    <div class="sidebar-header"><img class="college-logo sidebar-college-logo" src="{{ url_for('static', filename='images/ms-college-logo.png') }}" alt="MS College"><div><div style="font-weight:700;font-size:0.95rem;">MS College</div><div style="font-size:0.75rem;color:var(--text-muted);">Staff Panel</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('staff.dashboard') }}" class="sidebar-link"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="{{ url_for('staff.dashboard') }}" class="sidebar-link active"><i class="fa-solid fa-calendar-days"></i><span>My Events</span></a>
+      <a href="{{ url_for('staff.staff_reports') }}" class="sidebar-link"><i class="fa-solid fa-file-chart-column"></i><span>Reports</span></a>
+      <div class="sidebar-divider"></div>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link sidebar-link-danger"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+      <div>
+        <h1 class="page-title">{{ event.title }}</h1>
+        <p class="page-sub"><span class="badge badge-{{ event.event_type }}">{{ event.event_type|capitalize }}</span> | {{ event.event_date }} | {{ event.venue }}</p>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid stats-grid-sm animate-fadeInUp">
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(230,57,70,0.15);color:var(--accent-red);"><i class="fa-solid fa-users"></i></div><div class="stat-body"><div class="stat-num">{{ stats.total }}</div><div class="stat-label">Registered</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(46,204,113,0.15);color:#2ecc71;"><i class="fa-solid fa-circle-check"></i></div><div class="stat-body"><div class="stat-num">{{ stats.present }}</div><div class="stat-label">Present</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(231,76,60,0.15);color:#e74c3c;"><i class="fa-solid fa-circle-xmark"></i></div><div class="stat-body"><div class="stat-num">{{ stats.absent }}</div><div class="stat-label">Absent</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(243,156,18,0.15);color:#f39c12;"><i class="fa-solid fa-clock"></i></div><div class="stat-body"><div class="stat-num">{{ stats.pending }}</div><div class="stat-label">Pending</div></div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="section-card animate-fadeInUp animate-stagger-1">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('attendance', this)"><i class="fa-solid fa-clipboard-list"></i> Attendance</button>
+        <button class="tab-btn" onclick="showTab('participants', this)"><i class="fa-solid fa-users"></i> Participants</button>
+        {% if event.event_type == 'seminar' %}<button class="tab-btn" onclick="showTab('ppts', this)"><i class="fa-solid fa-file-powerpoint"></i> PPT Submissions</button>{% endif %}
+      </div>
+
+      <!-- Attendance Tab -->
+      <div class="tab-content active" id="tab-attendance">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <span class="text-muted">Click the button next to each participant to mark attendance</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="markAllPresent()"><i class="fa-solid fa-check-double"></i> Mark All Present</button>
+          </div>
+        </div>
+        {% if participants %}
+        <div class="table-wrap">
+          <table class="data-table" id="attendanceTable">
+            <thead><tr><th>#</th><th>Name</th><th>Roll No</th><th>Dept</th><th>Year</th>{% if event.event_type=='symposium' %}<th>Team</th>{% endif %}<th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              {% for p in participants %}
+              <tr id="row-{{ p.id }}">
+                <td>{{ loop.index }}</td>
+                <td><strong>{{ p.user_name }}</strong></td>
+                <td>{{ p.roll_no }}</td>
+                <td>{{ p.dept }}</td>
+                <td>{{ p.section }}</td>
+                {% if event.event_type == 'symposium' %}<td>{{ p.team_name or '—' }}</td>{% endif %}
+                <td id="status-{{ p.id }}"><span class="badge badge-{{ p.attendance_status }}">{{ p.attendance_status|capitalize }}</span></td>
+                <td>
+                  <div style="display:flex;gap:4px;">
+                    <button class="btn btn-success btn-sm" onclick="markAttendance({{ p.id }}, 'present')"><i class="fa-solid fa-check"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="markAttendance({{ p.id }}, 'absent')"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}<div class="empty-state"><i class="fa-solid fa-users-slash"></i><p>No participants registered yet.</p></div>{% endif %}
+        <div class="form-footer mt-3">
+          <form method="POST" action="{{ url_for('staff.generate_report', event_id=event.id) }}" onsubmit="return confirm('Generate PDF report for this event?')">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-file-pdf"></i> Generate Event Report</button>
+          </form>
+        </div>
+        <div class="form-footer mt-2">
+          <a class="btn btn-outline" href="{{ url_for('staff.workshop_sessions', event_id=event.id) }}"><i class="fa-solid fa-calendar-day"></i> Daily Workshop Attendance</a>
+        </div>
+      </div>
+
+      <!-- Participants Tab -->
+      <div class="tab-content hidden" id="tab-participants">
+        {% if participants %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Name</th><th>Roll No</th><th>Dept</th><th>Year of Study</th>{% if event.event_type=='symposium' %}<th>Sub-Event</th><th>Team</th>{% endif %}<th>Registered On</th><th>Certificate</th></tr></thead>
+            <tbody>
+              {% for p in participants %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td><strong>{{ p.user_name }}</strong></td>
+                <td>{{ p.roll_no }}</td>
+                <td>{{ p.dept }}</td>
+                <td>{{ p.section }}</td>
+                {% if event.event_type == 'symposium' %}<td>{{ p.sub_event_name or '—' }}</td><td>{{ p.team_name or '—' }}</td>{% endif %}
+                <td>{{ p.registered_at.strftime('%d %b %Y') if p.registered_at else '' }}</td>
+                <td>{% if p.certificate_issued %}<span class="badge badge-success">Issued</span>{% else %}<span class="badge badge-pending">Pending</span>{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}<div class="empty-state"><i class="fa-solid fa-users-slash"></i><p>No participants yet.</p></div>{% endif %}
+      </div>
+
+      <!-- PPT Tab (seminar only) -->
+      {% if event.event_type == 'seminar' %}
+      <div class="tab-content hidden" id="tab-ppts">
+        {% if participants %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Name</th><th>Roll No</th><th>PPT Submission</th><th>Score</th></tr></thead>
+            <tbody>
+              {% for p in participants %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td><strong>{{ p.user_name }}</strong></td>
+                <td>{{ p.roll_no }}</td>
+                <td>
+                  {% if p.ppt_file_path %}
+                  <a href="{{ url_for('static', filename='uploads/ppts/' + p.ppt_file_path.split('/')[-1]) }}" class="btn btn-outline btn-sm" target="_blank">
+                    <i class="fa-solid fa-file-powerpoint"></i> Download PPT
+                  </a>
+                  {% else %}<span class="text-muted">Not submitted</span>{% endif %}
+                </td>
+                <td>
+                  <form method="post" action="{{ url_for('staff.score_presentation', event_id=event.id, registration_id=p.id) }}" style="display:flex;gap:6px;align-items:center;min-width:220px;">
+                    <input type="number" name="score" min="0" max="100" step="0.5" required class="form-control" style="width:85px" placeholder="0-100">
+                    <input type="hidden" name="max_score" value="100">
+                    <button class="btn btn-primary btn-sm" type="submit">Save</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}<div class="empty-state"><i class="fa-solid fa-file-powerpoint"></i><p>No PPT submissions yet.</p></div>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+
+<script>
+function showTab(name, button) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => { c.classList.remove('active'); c.classList.add('hidden'); });
+  if (button) button.classList.add('active');
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function markAttendance(regId, status) {
+  fetch('{{ url_for("staff.mark_attendance", event_id=event.id) }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ registration_id: regId, status: status })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      const cell = document.getElementById('status-' + regId);
+      const colorMap = { present: 'success', absent: 'danger', pending: 'pending' };
+      cell.innerHTML = `<span class="badge badge-${colorMap[status] || status}">${status.charAt(0).toUpperCase()+status.slice(1)}</span>`;
+    }
+  });
+}
+
+function markAllPresent() {
+  if (!confirm('Mark all participants as present?')) return;
+  document.querySelectorAll('#attendanceTable tbody tr').forEach(row => {
+    const id = parseInt(row.id.replace('row-', ''));
+    markAttendance(id, 'present');
+  });
+}
+</script>
+{% endblock %}

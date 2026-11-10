@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}My Profile – MS College{% endblock %}
+{% block content %}
+<div class="container page-wrapper" style="max-width:900px;padding-top:28px;padding-bottom:50px;">
+  <div class="section-card">
+    <div class="section-header"><div><h1 class="page-title">My Profile</h1><p class="text-muted">Update your account information.</p></div></div>
+    <form method="post" enctype="multipart/form-data">
+      {% if role in ['participant', 'staff'] %}
+      <div class="form-group profile-picture-field">
+        <label class="form-label" for="profile_image">Profile picture</label>
+        {% if profile.profile_image %}<img class="profile-picture-preview" src="{{ url_for('static', filename='uploads/profiles/' + profile.profile_image) }}" alt="Current profile picture">{% endif %}
+        <input class="form-control" type="file" id="profile_image" name="profile_image" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+        <small class="text-muted">PNG, JPG, JPEG or WEBP; upload a new image to replace the current one.</small>
+      </div>
+      {% endif %}
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Full Name</label><input class="form-control" name="name" value="{{ profile.name }}" required></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ profile.email }}" required></div>
+      </div>
+      {% if role != 'admin' %}
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-control" name="phone" value="{{ profile.phone or '' }}"></div>
+        {% if role == 'participant' %}
+        <div class="form-group"><label class="form-label">Department</label>
+          <select class="form-control form-select" name="dept" required>
+          {% for d in ['Computer Science (CS)','Information Technology (IT)','Computer Applications (BCA)','Microbiology','Botany','Physics','Mathematics','Tamil','English','Physical Education','Other'] %}
+          <option value="{{ d }}" {% if profile.dept==d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}</select>
+        </div>
+        {% else %}
+        <div class="form-group"><label class="form-label">Department</label><input class="form-control" name="department" value="{{ profile.department or '' }}"></div>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% if role == 'participant' %}
+      <div class="form-group"><label class="form-label">Year of Study</label>
+        <select class="form-control form-select" name="year_of_study" required>
+        {% for y in ['First Year','Second Year','Third Year'] %}
+        <option value="{{ y }}" {% if profile.section==y %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}</select>
+      </div>
+      {% elif role == 'staff' %}
+      <div class="form-group"><label class="form-label">Designation</label><input class="form-control" name="designation" value="{{ profile.designation or '' }}"></div>
+      {% endif %}
+      <div class="form-footer"><a href="{{ url_for('index') }}" class="btn btn-outline">Cancel</a><button class="btn btn-primary" type="submit">Save Profile</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

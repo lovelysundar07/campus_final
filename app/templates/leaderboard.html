@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard – {{ event.title }}{% endblock %}
+{% block content %}
+<section class="page-container leaderboard-page">
+  <div class="page-heading"><div><p class="eyebrow">MS COLLEGE · RESULTS</p><h1>{{ event.title }} Leaderboard</h1><p class="text-muted">Results are displayed after administrator publication.</p></div></div>
+  {% if not event.results_published %}<div class="card"><h3>Results not published yet</h3><p class="text-muted">Staff scores are being reviewed by the administrator. Check notifications for the publication announcement.</p></div>
+  {% elif not results %}<div class="card"><p>No scored entries are available for this event yet.</p></div>
+  {% else %}
+    {% set ns = namespace(current=-999) %}
+    {% for r in results %}
+      {% if r.sub_event_id != ns.current %}{% if not loop.first %}</tbody></table></div></div>{% endif %}{% set ns.current = r.sub_event_id %}<div class="card leaderboard-card"><h2>{{ r.sub_event_name }}</h2><div class="table-responsive"><table class="data-table"><thead><tr><th>Rank</th><th>Participant</th><th>Department</th><th>Score</th><th>Prize</th></tr></thead><tbody>{% endif %}
+      <tr><td><span class="rank-badge rank-{{ r.rank }}">{{ r.rank }}</span></td><td>{{ r.participant_name }}</td><td>{{ r.dept or '—' }}</td><td>{{ '%.1f'|format(r.score_pct or 0) }}%</td><td>{{ r.prize }}</td></tr>
+      {% if loop.last %}</tbody></table></div></div>{% endif %}
+    {% endfor %}
+  {% endif %}
+</section>
+{% endblock %}

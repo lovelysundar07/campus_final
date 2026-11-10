@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}My Certificates – MS College{% endblock %}
+{% block content %}
+<div class="participant-layout">
+  <main class="participant-main">
+    <div class="participant-topbar">
+      <div><h1 class="page-title" data-i18n="nav.certificates">My Certificates</h1><p class="page-sub">Download your earned certificates</p></div>
+    </div>
+    {% if certificates %}
+    <div class="certs-full-grid animate-fadeInUp">
+      {% for cert in certificates %}
+      <div class="cert-full-card hover-lift hover-glow animate-stagger-{{ loop.index % 4 }}">
+        <div class="cert-full-left">
+          <div class="cert-full-icon"><i class="fa-solid fa-award"></i></div>
+          <div>
+            <div class="cert-full-event">{{ cert.event_title }}</div>
+            <span class="badge badge-{{ cert.event_type }}">{{ cert.event_type|capitalize }}</span>
+          </div>
+        </div>
+        <div class="cert-full-meta">
+          <div><i class="fa-solid fa-calendar" style="color:var(--accent-red);"></i> Event: {{ cert.event_date }}</div>
+          <div><i class="fa-solid fa-certificate" style="color:var(--accent-red);"></i> Issued: {{ cert.issued_at.strftime('%d %b %Y') if cert.issued_at else '—' }}</div>
+          <div><i class="fa-solid fa-hashtag" style="color:var(--text-muted);"></i> <span class="text-muted" style="font-size:0.8rem;">{{ cert.certificate_number }}</span></div>
+        </div>
+        {% if cert.certificate_path %}
+        <a href="{{ url_for('static', filename='uploads/certificates/' + cert.certificate_path.split('/')[-1]) }}" class="btn btn-primary" target="_blank">
+          <i class="fa-solid fa-download"></i> Download PDF
+        </a>
+        {% else %}
+        <span class="btn btn-ghost" style="cursor:default;">Processing...</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="section-card animate-fadeInUp">
+      <div class="empty-state">
+        <i class="fa-solid fa-award fa-3x" style="color:var(--text-muted);"></i>
+        <p>No certificates yet.</p>
+        <p class="text-muted" style="font-size:0.88rem;">Attend events and certificates will appear here after admin issues them.</p>
+        <a href="{{ url_for('participant.browse_events') }}" class="btn btn-primary mt-2">Browse Events</a>
+      </div>
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

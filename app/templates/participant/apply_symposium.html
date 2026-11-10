@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}Register for {{ event.title }}{% endblock %}
+{% block content %}
+<div class="participant-layout">
+  <main class="participant-main">
+    <div class="participant-topbar">
+      <a href="{{ url_for('participant.browse_events') }}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
+      <div><h1 class="page-title">Register for Symposium</h1><p class="page-sub">{{ event.title }}</p></div>
+    </div>
+
+    <div class="apply-layout">
+      <!-- Event Info Sidebar -->
+      <div class="apply-event-info section-card animate-fadeInLeft">
+        <span class="badge badge-symposium">Symposium</span>
+        <h3 class="mt-2">{{ event.title }}</h3>
+        <div class="event-info-list">
+          <div><i class="fa-solid fa-calendar" style="color:var(--accent-red);"></i> {{ event.event_date }}</div>
+          <div><i class="fa-solid fa-clock" style="color:var(--accent-red);"></i> {{ event.start_time }} – {{ event.end_time }}</div>
+          <div><i class="fa-solid fa-location-dot" style="color:var(--accent-red);"></i> {{ event.venue }}</div>
+          {% if event.registration_deadline %}<div><i class="fa-solid fa-hourglass-half" style="color:#f39c12;"></i> Deadline: {{ event.registration_deadline }}</div>{% endif %}
+        </div>
+        {% if sub_events %}
+        <div class="mt-3">
+          <h5 style="color:var(--text-secondary);margin-bottom:8px;">Sub-Events</h5>
+          {% for se in sub_events %}
+          <div class="sub-event-info-card">
+            <strong>{{ se.name }}</strong>
+            <span class="text-muted" style="font-size:0.8rem;">Teams: {{ se.allowed_teams }} | Size: {{ se.min_team_size }}–{{ se.max_team_size }}</span>
+            {% if se.description %}<p class="text-muted" style="font-size:0.78rem;margin:4px 0 0;">{{ se.description }}</p>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Registration Form -->
+      <div class="apply-form-card section-card animate-fadeInRight">
+        <div class="section-header"><h3><i class="fa-solid fa-users-gear"></i> Team Registration</h3></div>
+        <form method="POST" action="{{ url_for('participant.apply_event', event_id=event.id) }}" id="symposiumForm">
+          <input type="hidden" name="event_type" value="symposium"/>
+
+          <!-- Sub-Event Selection -->
+          {% if sub_events %}
+          <div class="form-group">
+            <label class="form-label">Select Sub-Event *</label>
+            <div class="sub-event-radio-group">
+              {% for se in sub_events %}
+              <label class="sub-event-radio-card" for="se_{{ se.id }}">
+                <input type="radio" name="sub_event_id" id="se_{{ se.id }}" value="{{ se.id }}" required onchange="updateMaxMembers({{ se.max_team_size }})"/>
+                <div class="sub-event-radio-inner">
+                  <strong>{{ se.name }}</strong>
+                  <span class="text-muted" style="font-size:0.8rem;">Max {{ se.max_team_size }} members per team</span>
+                </div>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Team Name -->
+          <div class="form-group">
+            <label class="form-label" data-i18n="form.teamName">Team Name *</label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-shield-halved input-icon"></i>
+              <input type="text" name="team_name" class="form-control" placeholder="Enter your team name" required/>
+            </div>
+          </div>
+
+          <!-- Team Members -->
+          <div class="form-group">
+            <label class="form-label">Team Members</label>
+            <div id="membersList">
+              <!-- Leader (pre-filled, readonly) -->
+              <div class="member-row leader-row" data-index="0">
+                <div class="member-row-header">
+                  <span class="member-num">Member 1</span>
+                  <span class="badge badge-success" style="font-size:0.7rem;">Leader (You)</span>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><input type="text" name="member_name[]" class="form-control" value="{{ session.get('user_name','') }}" readonly style="opacity:0.7;"/></div>
+                  <div class="form-group"><input type="text" name="member_roll[]" class="form-control" value="{{ user.roll_no }}" readonly style="opacity:0.7;" placeholder="Roll No"/></div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><input type="text" name="member_dept[]" class="form-control" value="{{ user.dept }}" readonly style="opacity:0.7;" placeholder="Department"/></div>
+                  <div class="form-group"><input type="text" name="member_section[]" class="form-control" value="{{ user.section }}" readonly style="opacity:0.7;" placeholder="Year of Study"/></div>
+                </div>
+                <input type="hidden" name="member_is_leader[]" value="1"/>
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm mt-2" onclick="addMember()" id="addMemberBtn" data-i18n="form.addMember">
+              <i class="fa-solid fa-user-plus"></i> Add Member
+            </button>
+            <span class="text-muted ml-2" style="font-size:0.8rem;" id="memberCount">(1 member added)</span>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full btn-lg mt-3">
+            <i class="fa-solid fa-trophy"></i> Register Team
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+let memberCount = 1;
+let maxMembers = {{ sub_events[0].max_team_size if sub_events else 4 }};
+
+function updateMaxMembers(max) { maxMembers = max; }
+
+function addMember() {
+  if (memberCount >= maxMembers) {
+    alert('Maximum ' + maxMembers + ' members allowed for this sub-event.');
+    return;
+  }
+  memberCount++;
+  const list = document.getElementById('membersList');
+  const div = document.createElement('div');
+  div.className = 'member-row';
+  div.dataset.index = memberCount - 1;
+  div.innerHTML = `
+    <div class="member-row-header">
+      <span class="member-num">Member ${memberCount}</span>
+      <button type="button" class="btn-icon-danger" onclick="removeMember(this)"><i class="fa-solid fa-user-minus"></i></button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><input type="text" name="member_name[]" class="form-control" placeholder="Full Name" required/></div>
+      <div class="form-group"><input type="text" name="member_roll[]" class="form-control" placeholder="Roll Number" required/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><input type="text" name="member_dept[]" class="form-control" placeholder="Department" required/></div>
+      <div class="form-group"><input type="text" name="member_section[]" class="form-control" placeholder="Year of Study" required/></div>
+    </div>
+    <input type="hidden" name="member_is_leader[]" value="0"/>
+  `;
+  list.appendChild(div);
+  document.getElementById('memberCount').textContent = `(${memberCount} member${memberCount>1?'s':''} added)`;
+}
+
+function removeMember(btn) {
+  btn.closest('.member-row').remove();
+  memberCount--;
+  document.querySelectorAll('#membersList .member-row').forEach((row, i) => {
+    const num = row.querySelector('.member-num');
+    if (num) num.textContent = 'Member ' + (i + 1);
+  });
+  document.getElementById('memberCount').textContent = `(${memberCount} member${memberCount>1?'s':''} added)`;
+}
+</script>
+{% endblock %}

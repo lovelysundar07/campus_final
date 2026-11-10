@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Assign Staff – {{ event.title }}{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="sidebar" id="adminSidebar">
+    <div class="sidebar-header"><img class="college-logo sidebar-college-logo" src="{{ url_for('static', filename='images/ms-college-logo.png') }}" alt="MS College"><div><div style="font-weight:700;font-size:0.95rem;">MS College</div><div style="font-size:0.75rem;color:var(--text-muted);">Admin Panel</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="{{ url_for('admin.events_list') }}" class="sidebar-link active"><i class="fa-solid fa-calendar-days"></i><span>Manage Events</span></a>
+      <a href="{{ url_for('admin.staff_requests') }}" class="sidebar-link"><i class="fa-solid fa-user-check"></i><span>Staff Requests</span></a>
+      <div class="sidebar-divider"></div>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link sidebar-link-danger"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+      <div><h1 class="page-title">Assign Incharge Staff</h1><p class="page-sub">{{ event.title }} – {{ event.event_date }}</p></div>
+    </div>
+    <div class="section-card animate-fadeInUp">
+      <form method="POST" action="{{ url_for('admin.assign_staff', event_id=event.id) }}">
+        <div class="form-group">
+          <label class="form-label">Select Incharge Staff *</label>
+          <select name="staff_id" class="form-control form-select" required>
+            <option value="">-- Select Staff Member --</option>
+            {% for s in all_staff %}
+            <option value="{{ s.id }}" {% if s.id in assigned_ids %}disabled{% endif %}>
+              {{ s.name }} ({{ s.designation }}, {{ s.department }}) {% if s.id in assigned_ids %}– Already assigned{% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-footer mt-3">
+          <a href="{{ url_for('admin.events_list') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Back</a>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-user-tie"></i> Assign Staff</button>
+        </div>
+      </form>
+      {% if assigned_staff %}
+      <div class="mt-4">
+        <h4 style="color:var(--text-secondary);margin-bottom:12px;">Currently Assigned Incharges</h4>
+        <div class="staff-cards-grid">
+          {% for s in assigned_staff %}
+          <div class="staff-mini-card">
+            <div class="staff-mini-avatar">{{ s.name[0].upper() }}</div>
+            <div><strong>{{ s.name }}</strong><br><span class="text-muted" style="font-size:0.8rem;">{{ s.designation }} – {{ s.department }}</span></div>
+            <form method="POST" action="{{ url_for('admin.assign_staff', event_id=event.id, staff_id=s.id) }}" onsubmit="return confirm('Remove this incharge?')">
+              <button type="submit" class="btn-icon btn-icon-danger" title="Remove"><i class="fa-solid fa-user-minus"></i></button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endblock %}

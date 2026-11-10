@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Register for {{ event.title }}{% endblock %}
+{% block content %}
+<div class="participant-layout">
+  <main class="participant-main">
+    <div class="participant-topbar">
+      <a href="{{ url_for('participant.browse_events') }}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Back</a>
+      <div><h1 class="page-title">Register for Workshop</h1><p class="page-sub">{{ event.title }}</p></div>
+    </div>
+
+    {% if assigned_staff %}
+    <div class="assigned-staff-contact apply-contact">
+      <strong><i class="fa-solid fa-user-tie"></i> Assigned event staff</strong>
+      {% for staff_contact in assigned_staff %}
+      <div>{{ staff_contact.name }}{% if staff_contact.designation %} · {{ staff_contact.designation }}{% endif %}{% if staff_contact.email %} · <a href="mailto:{{ staff_contact.email }}">{{ staff_contact.email }}</a>{% endif %}{% if staff_contact.phone %} · <a href="tel:{{ staff_contact.phone }}">{{ staff_contact.phone }}</a>{% endif %}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <div class="apply-layout">
+      <!-- Event Sidebar -->
+      <div class="apply-event-info section-card animate-fadeInLeft">
+        <div class="event-info-banner">
+          {% if event.banner_image %}<img src="{{ url_for('static', filename='uploads/banners/' + event.banner_image.split('/')[-1]) }}" alt="{{ event.title }}"/>
+          {% else %}<div class="event-card-banner-placeholder"><i class="fa-solid fa-screwdriver-wrench fa-3x"></i></div>{% endif %}
+        </div>
+        <span class="badge badge-workshop">Workshop</span>
+        <h3 class="mt-2">{{ event.title }}</h3>
+        <div class="event-info-list">
+          <div><i class="fa-solid fa-calendar" style="color:var(--accent-red);"></i> {{ event.event_date }}</div>
+          <div><i class="fa-solid fa-clock" style="color:var(--accent-red);"></i> {{ event.start_time }} – {{ event.end_time }}</div>
+          <div><i class="fa-solid fa-location-dot" style="color:var(--accent-red);"></i> {{ event.venue }}</div>
+          <div><i class="fa-solid fa-users" style="color:var(--accent-red);"></i> {{ event.capacity }} seats</div>
+          {% if event.registration_deadline %}<div><i class="fa-solid fa-hourglass-half" style="color:#f39c12;"></i> Deadline: {{ event.registration_deadline }}</div>{% endif %}
+        </div>
+        {% if event.description %}<p class="text-muted mt-2" style="font-size:0.88rem;">{{ event.description }}</p>{% endif %}
+      </div>
+
+      <!-- Registration Form -->
+      <div class="apply-form-card section-card animate-fadeInRight">
+        <div class="section-header"><h3><i class="fa-solid fa-user-pen"></i> Your Details</h3></div>
+        <form method="POST" action="{{ url_for('participant.apply_event', event_id=event.id) }}">
+          <input type="hidden" name="event_type" value="workshop"/>
+          <div class="form-group">
+            <label class="form-label" data-i18n="form.name">Full Name</label>
+            <input type="text" name="name" class="form-control" value="{{ session.get('user_name','') }}" readonly style="opacity:0.7;"/>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" data-i18n="form.rollNo">Roll Number</label>
+              <input type="text" name="roll_no" class="form-control" value="{{ user.roll_no }}" readonly style="opacity:0.7;"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="form.section">Year of Study</label>
+              <input type="text" name="section" class="form-control" value="{{ user.section }}" readonly style="opacity:0.7;"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="form.dept">Department</label>
+            <input type="text" name="dept" class="form-control" value="{{ user.dept }}" readonly style="opacity:0.7;"/>
+          </div>
+          <div class="alert-info-box">
+            <i class="fa-solid fa-circle-info"></i>
+            Your details are pre-filled from your profile. A certificate will be issued upon completion.
+          </div>
+          <button type="submit" class="btn btn-primary btn-full btn-lg mt-3" data-i18n="events.register">
+            <i class="fa-solid fa-calendar-check"></i> Register for Workshop
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

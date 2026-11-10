@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}My Registrations – MS College{% endblock %}
+{% block content %}
+<div class="participant-layout">
+  <main class="participant-main">
+    <div class="participant-topbar">
+      <div><h1 class="page-title" data-i18n="nav.myRegistrations">My Registrations</h1><p class="page-sub">All events you have registered for</p></div>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <a href="{{ url_for('participant.browse_events') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-search"></i> Browse Events</a>
+      </div>
+    </div>
+    <div class="section-card animate-fadeInUp">
+      {% if registrations %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>#</th><th>Event</th><th>Type</th><th>Date</th><th>Sub-Event/Team</th><th>PPT</th><th>Attendance</th><th>Certificate</th></tr>
+          </thead>
+          <tbody>
+            {% for reg in registrations %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><strong>{{ reg.event_title }}</strong>
+        {% if reg.assigned_staff %}<div class="assigned-staff-contact"><strong>Event contact</strong>{% for staff_contact in reg.assigned_staff %}<div>{{ staff_contact.name }}{% if staff_contact.email %} · <a href="mailto:{{ staff_contact.email }}">{{ staff_contact.email }}</a>{% endif %}{% if staff_contact.phone %} · <a href="tel:{{ staff_contact.phone }}">{{ staff_contact.phone }}</a>{% endif %}</div>{% endfor %}</div>{% endif %}</td>
+              <td><span class="badge badge-{{ reg.event_type }}">{{ reg.event_type|capitalize }}</span></td>
+              <td>{{ reg.event_date }}</td>
+              <td>
+                {% if reg.sub_event_name %}{{ reg.sub_event_name }}{% endif %}
+                {% if reg.team_name %}<br><span class="text-muted" style="font-size:0.8rem;">Team: {{ reg.team_name }}</span>{% endif %}
+                {% if not reg.sub_event_name and not reg.team_name %}—{% endif %}
+              </td>
+              <td>
+                {% if reg.ppt_file_path %}
+                <a href="{{ url_for('static', filename='uploads/ppts/' + reg.ppt_file_path.split('/')[-1]) }}" target="_blank" class="btn-icon" title="View PPT"><i class="fa-solid fa-file-powerpoint"></i></a>
+                {% else %}<span class="text-muted">—</span>{% endif %}
+              </td>
+              <td><span class="badge badge-{{ reg.attendance_status }}">{{ reg.attendance_status|capitalize }}</span></td>
+              <td>
+                {% if reg.certificate_issued %}
+                  {% if reg.certificate_path %}
+                  <a href="{{ url_for('static', filename='uploads/certificates/' + reg.certificate_path.split('/')[-1]) }}" target="_blank" class="btn btn-outline btn-sm"><i class="fa-solid fa-download"></i> Download</a>
+                  {% else %}<span class="badge badge-success">Issued</span>{% endif %}
+                {% else %}<span class="badge badge-pending">Pending</span>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fa-solid fa-calendar-xmark fa-3x"></i>
+        <p>You haven't registered for any events yet.</p>
+        <a href="{{ url_for('participant.browse_events') }}" class="btn btn-primary">Browse Events</a>
+      </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endblock %}

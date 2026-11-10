@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Edit Sub-Event – MS College{% endblock %}
+{% block content %}
+<div class="container page-wrapper" style="max-width:980px;padding-top:110px;padding-bottom:50px;">
+  <div class="section-card">
+    <div class="section-header">
+      <div><h1 class="page-title">Edit Sub-Event</h1><p class="text-muted">{{ sub_event.symposium_title }}</p></div>
+    </div>
+    <form method="post">
+      <div class="form-group"><label class="form-label">Sub-Event Name</label>
+        <input class="form-control" name="name" required value="{{ sub_event.name }}"></div>
+      <div class="form-group"><label class="form-label">Venue</label>
+        <input class="form-control" name="venue" value="{{ sub_event.venue or '' }}" placeholder="Lab / Auditorium / Seminar Hall"></div>
+      <div class="form-group"><label class="form-label">Description / Guidelines</label>
+        <textarea class="form-control" name="description" rows="3">{{ sub_event.description or '' }}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Allowed Teams</label><input class="form-control" type="number" min="1" name="allowed_teams" value="{{ sub_event.allowed_teams }}"></div>
+        <div class="form-group"><label class="form-label">Minimum Team Size</label><input class="form-control" type="number" min="1" name="min_team_size" value="{{ sub_event.min_team_size }}"></div>
+        <div class="form-group"><label class="form-label">Maximum Team Size</label><input class="form-control" type="number" min="1" name="max_team_size" value="{{ sub_event.max_team_size }}"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign Staff</label>
+        <div class="text-muted" style="margin-bottom:8px">Select approved staff responsible for this sub-event.</div>
+        {% if staff_list %}
+          {% for staff in staff_list %}
+          <label style="display:flex;gap:10px;align-items:center;padding:9px;border:1px solid var(--border);border-radius:9px;margin-bottom:7px;">
+            <input type="checkbox" name="staff_ids" value="{{ staff.id }}" {% if staff.id in assigned_ids %}checked{% endif %}>
+            <span><strong>{{ staff.name }}</strong><small class="text-muted"> — {{ staff.department or 'Department not set' }}{% if staff.designation %}, {{ staff.designation }}{% endif %}</small></span>
+          </label>
+          {% endfor %}
+        {% else %}<p class="text-muted">No approved staff accounts are available yet.</p>{% endif %}
+      </div>
+      <div class="form-footer">
+        <a class="btn btn-outline" href="{{ url_for('admin.edit_event', event_id=sub_event.parent_event_id) }}">Cancel</a>
+        <button class="btn btn-primary" type="submit">Save Sub-Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

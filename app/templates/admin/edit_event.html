@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Edit Event – Admin
+      {% if sub_events %}
+      <div class="section-card mt-3">
+        <div class="section-header"><h3>Symposium Sub-Events</h3></div>
+        <p class="text-muted">Edit each published sub-event venue and details, and assign staff.</p>
+        {% for sub in sub_events %}
+        <div class="form-row" style="align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div class="form-group"><strong>{{ sub.name }}</strong><div class="text-muted">{{ sub.venue or 'Venue not set' }}</div></div>
+          <div class="form-group" style="display:flex;justify-content:flex-end;align-items:center;">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('admin.edit_sub_event', sub_event_id=sub.id) }}">Edit details / Assign staff</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="sidebar" id="adminSidebar">
+    <div class="sidebar-header"><img class="college-logo sidebar-college-logo" src="{{ url_for('static', filename='images/ms-college-logo.png') }}" alt="MS College"><div><div style="font-weight:700;font-size:0.95rem;">MS College</div><div style="font-size:0.75rem;color:var(--text-muted);">Admin Panel</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="{{ url_for('admin.events_list') }}" class="sidebar-link active"><i class="fa-solid fa-calendar-days"></i><span>Manage Events</span></a>
+      <a href="{{ url_for('admin.staff_requests') }}" class="sidebar-link"><i class="fa-solid fa-user-check"></i><span>Staff Requests</span></a>
+      <div class="sidebar-divider"></div>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link sidebar-link-danger"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+      <div><h1 class="page-title">Edit Event</h1><p class="page-sub">{{ event.title }}</p></div>
+    </div>
+    <div class="section-card animate-fadeInUp" style="max-width:800px;">
+      <form method="POST" action="{{ url_for('admin.edit_event', event_id=event.id) }}" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label">Event Title *</label>
+          <input type="text" name="title" class="form-control" value="{{ event.title }}" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Event Type</label>
+          <input type="hidden" name="event_type" value="{{ event.event_type }}"/>
+          <input type="text" class="form-control" value="{{ event.event_type|capitalize }}" readonly style="opacity:0.7;"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-control" rows="4">{{ event.description or '' }}</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Event Date *</label>
+            <input type="date" name="event_date" class="form-control" value="{{ event.event_date }}" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Registration Deadline</label>
+            <input type="date" name="registration_deadline" class="form-control" value="{{ event.registration_deadline or '' }}"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Start Time *</label>
+            <input type="time" name="start_time" class="form-control" value="{{ event.start_time }}" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Time *</label>
+            <input type="time" name="end_time" class="form-control" value="{{ event.end_time }}" required/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Venue *</label>
+            <input type="text" name="venue" class="form-control" value="{{ event.venue }}" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Capacity</label>
+            <input type="number" name="capacity" class="form-control" value="{{ event.capacity }}" min="1"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-control form-select">
+            {% for s in ['upcoming','ongoing','completed','cancelled'] %}
+            <option value="{{ s }}" {% if event.status == s %}selected{% endif %}>{{ s|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Banner Image (optional)</label>
+          <input type="file" name="banner_image" accept="image/*" class="form-control"/>
+          {% if event.banner_image %}
+          <p class="text-muted mt-1" style="font-size:0.8rem;"><i class="fa-solid fa-image"></i> Current: {{ event.banner_image.split('/')[-1] }}</p>
+          {% endif %}
+        </div>
+        <div class="form-footer mt-3">
+          <a href="{{ url_for('admin.events_list') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Cancel</a>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+      {% if sub_events %}
+      <div class="section-card mt-3">
+        <div class="section-header"><h3>Symposium Sub-Events</h3></div>
+        <p class="text-muted">Edit each published sub-event venue and details, and assign staff.</p>
+        {% for sub in sub_events %}
+        <div class="form-row" style="align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div class="form-group"><strong>{{ sub.name }}</strong><div class="text-muted">{{ sub.venue or 'Venue not set' }}</div></div>
+          <div class="form-group" style="display:flex;justify-content:flex-end;align-items:center;">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('admin.edit_sub_event', sub_event_id=sub.id) }}">Edit details / Assign staff</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+{% endblock %}

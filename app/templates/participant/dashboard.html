@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}My Dashboard – MS College Events{% endblock %}
+{% block content %}
+<div class="participant-layout">
+  <main class="participant-main">
+    <div class="participant-topbar">
+      <div class="participant-welcome animate-fadeInUp">
+        <div class="welcome-avatar">{{ session.get('user_name','U')[0].upper() }}</div>
+        <div>
+          <h2>Welcome back, <span style="color:var(--accent-red);">{{ session.get('user_name') }}</span>!</h2>
+          <p class="text-muted">{{ user.roll_no }} &bull; {{ user.dept }} &bull; Year of Study {{ user.section }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid animate-fadeInUp animate-stagger-1">
+      <div class="stat-card hover-lift hover-glow">
+        <div class="stat-icon" style="background:rgba(230,57,70,0.15);color:var(--accent-red);"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="stat-body"><div class="stat-num">{{ registrations|length }}</div><div class="stat-label" data-i18n="participant.registeredEvents">Registered Events</div></div>
+      </div>
+      <div class="stat-card hover-lift hover-glow animate-stagger-1">
+        <div class="stat-icon" style="background:rgba(46,204,113,0.15);color:#2ecc71;"><i class="fa-solid fa-certificate"></i></div>
+        <div class="stat-body"><div class="stat-num">{{ cert_count }}</div><div class="stat-label">Certificates Earned</div></div>
+      </div>
+      <div class="stat-card hover-lift hover-glow animate-stagger-2">
+        <div class="stat-icon" style="background:rgba(52,152,219,0.15);color:#3498db;"><i class="fa-solid fa-file-powerpoint"></i></div>
+        <div class="stat-body"><div class="stat-num">{{ ppt_count }}</div><div class="stat-label">PPTs Uploaded</div></div>
+      </div>
+    </div>
+
+    <!-- Quick Browse -->
+    <div class="section-card animate-fadeInUp animate-stagger-2">
+      <div class="section-header">
+        <h3><i class="fa-solid fa-compass"></i> Browse Events</h3>
+        <a href="{{ url_for('participant.browse_events') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-search"></i> All Events</a>
+      </div>
+      <p class="text-muted" style="margin-bottom:16px;">Explore upcoming workshops, seminars, and symposiums and register now.</p>
+      <a href="{{ url_for('participant.browse_events') }}" class="btn btn-primary"><i class="fa-solid fa-calendar-days"></i> Browse All Events</a>
+    </div>
+
+    <!-- My Registrations -->
+    <div class="section-card animate-fadeInUp animate-stagger-3">
+      <div class="section-header"><h3><i class="fa-solid fa-list-check"></i> My Registrations</h3><a href="{{ url_for('participant.my_registrations') }}" class="btn btn-ghost btn-sm">View All <i class="fa-solid fa-arrow-right"></i></a></div>
+      {% if registrations %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Event</th><th>Type</th><th>Date</th><th>Attendance</th><th>Certificate</th></tr></thead>
+          <tbody>
+            {% for reg in registrations[:5] %}
+            <tr>
+              <td><strong>{{ reg.event_title }}</strong></td>
+              <td><span class="badge badge-{{ reg.event_type }}">{{ reg.event_type|capitalize }}</span></td>
+              <td>{{ reg.event_date }}</td>
+              <td><span class="badge badge-{{ reg.attendance_status }}">{{ reg.attendance_status|capitalize }}</span></td>
+              <td>{% if reg.certificate_issued %}<span class="badge badge-success"><i class="fa-solid fa-certificate"></i> Issued</span>{% else %}<span class="badge badge-pending">Pending</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:24px;">
+        <i class="fa-solid fa-calendar-xmark"></i>
+        <p>You haven't registered for any events yet.</p>
+        <a href="{{ url_for('participant.browse_events') }}" class="btn btn-primary btn-sm">Browse Events</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- My Certificates -->
+    {% if cert_count > 0 %}
+    <div class="section-card animate-fadeInUp animate-stagger-4">
+      <div class="section-header"><h3><i class="fa-solid fa-certificate"></i> My Certificates</h3><a href="{{ url_for('participant.my_certificates') }}" class="btn btn-ghost btn-sm">View All <i class="fa-solid fa-arrow-right"></i></a></div>
+      <div class="certs-grid">
+        {% for cert in certificates %}
+        <div class="cert-card hover-lift hover-glow">
+          <div class="cert-icon"><i class="fa-solid fa-award"></i></div>
+          <div class="cert-info">
+            <div class="cert-event">{{ cert.event_title }}</div>
+            <div class="cert-date text-muted" style="font-size:0.8rem;">Issued: {{ cert.issued_at.strftime('%d %b %Y') if cert.issued_at else '' }}</div>
+            <div class="cert-number text-muted" style="font-size:0.75rem;">{{ cert.certificate_number }}</div>
+          </div>
+          <a href="{{ url_for('static', filename='uploads/certificates/' + cert.certificate_path.split('/')[-1]) }}" class="btn btn-outline btn-sm" target="_blank"><i class="fa-solid fa-download"></i></a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

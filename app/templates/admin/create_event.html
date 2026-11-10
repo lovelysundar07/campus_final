@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% block title %}Create Event – Admin{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="adminSidebar">
+    <div class="sidebar-header">
+      <img class="college-logo sidebar-college-logo" src="{{ url_for('static', filename='images/ms-college-logo.png') }}" alt="MS College">
+      <div><div style="font-weight:700;font-size:0.95rem;">MS College</div><div style="font-size:0.75rem;color:var(--text-muted);">Admin Panel</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="{{ url_for('admin.create_event') }}" class="sidebar-link active"><i class="fa-solid fa-calendar-plus"></i><span>Create Event</span></a>
+      <a href="{{ url_for('admin.events_list') }}" class="sidebar-link"><i class="fa-solid fa-calendar-days"></i><span>Manage Events</span></a>
+      <a href="{{ url_for('admin.staff_requests') }}" class="sidebar-link"><i class="fa-solid fa-user-check"></i><span>Staff Requests</span></a>
+      <a href="{{ url_for('admin.reports') }}" class="sidebar-link"><i class="fa-solid fa-file-chart-column"></i><span>Reports</span></a>
+      <div class="sidebar-divider"></div>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link sidebar-link-danger"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+      <div><h1 class="page-title">Create New Event</h1><p class="page-sub">Add a workshop, seminar, or symposium</p></div>
+    </div>
+
+    <!-- Step Indicators -->
+    <div class="step-indicator animate-fadeInUp">
+      <div class="step active" id="step-ind-1"><div class="step-num">1</div><div class="step-label">Event Type</div></div>
+      <div class="step-line"></div>
+      <div class="step" id="step-ind-2"><div class="step-num">2</div><div class="step-label">Event Details</div></div>
+      <div class="step-line" id="step-line-3" style="display:none;"></div>
+      <div class="step" id="step-ind-3" style="display:none;"><div class="step-num">3</div><div class="step-label">Sub-Events</div></div>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.create_event') }}" enctype="multipart/form-data" id="createEventForm" novalidate>
+
+      <!-- Step 1: Event Type -->
+      <div class="form-step" id="formStep1">
+        <div class="section-card animate-fadeInUp">
+          <div class="section-header"><h3><i class="fa-solid fa-hand-pointer"></i> Select Event Type</h3></div>
+          <div class="event-type-grid">
+            <label class="event-type-card" for="type_workshop">
+              <input type="radio" name="event_type" id="type_workshop" value="workshop" checked onchange="onEventTypeChange('workshop')">
+              <div class="event-type-inner">
+                <div class="event-type-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                <div class="event-type-name">Workshop</div>
+                <div class="event-type-desc">Hands-on skill building sessions with practical exercises</div>
+              </div>
+            </label>
+            <label class="event-type-card" for="type_seminar">
+              <input type="radio" name="event_type" id="type_seminar" value="seminar" onchange="onEventTypeChange('seminar')">
+              <div class="event-type-inner">
+                <div class="event-type-icon"><i class="fa-solid fa-person-chalkboard"></i></div>
+                <div class="event-type-name">Seminar</div>
+                <div class="event-type-desc">Knowledge sharing sessions with PPT presentations</div>
+              </div>
+            </label>
+            <label class="event-type-card" for="type_other">
+              <input type="radio" name="event_type" id="type_other" value="other" onchange="onEventTypeChange('other')">
+              <div class="event-type-inner">
+                <div class="event-type-icon"><i class="fa-solid fa-calendar-plus"></i></div>
+                <div class="event-type-name">Other Event</div>
+                <div class="event-type-desc">Create a custom college activity or programme</div>
+              </div>
+            </label>
+            <label class="event-type-card" for="type_symposium">
+              <input type="radio" name="event_type" id="type_symposium" value="symposium" onchange="onEventTypeChange('symposium')">
+              <div class="event-type-inner">
+                <div class="event-type-icon"><i class="fa-solid fa-trophy"></i></div>
+                <div class="event-type-name">Symposium</div>
+                <div class="event-type-desc">Multi-event technical competition with team entries</div>
+              </div>
+            </label>
+          </div>
+          <div class="form-group" id="customEventTypeWrap" hidden style="margin-top:18px;max-width:520px;">
+            <label class="form-label" for="custom_event_type">Custom event category</label>
+            <input class="form-control" id="custom_event_type" name="custom_event_type" maxlength="50" placeholder="e.g. Guest Lecture, Cultural Fest, Career Fair">
+          </div>
+          <div class="form-footer mt-4">
+            <button type="button" class="btn btn-primary btn-lg" onclick="goToStep2()">
+              Next: Event Details <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Event Details -->
+      <div class="form-step hidden" id="formStep2">
+        <div class="section-card animate-fadeInUp">
+          <div class="section-header">
+            <h3><i class="fa-solid fa-circle-info"></i> Event Details <span class="badge badge-workshop" id="selectedTypeBadge" style="margin-left:8px;">Workshop</span></h3>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Event Title <span style="color:var(--accent-red)">*</span></label>
+            <input type="text" name="title" id="eventTitle" class="form-control" placeholder="e.g. Modern Full-Stack Web Development Bootcamp" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea name="description" id="eventDesc" class="form-control" rows="4" placeholder="Describe the topics covered, speaker details, outcomes..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Event Date <span style="color:var(--accent-red)">*</span></label>
+              <input type="date" name="event_date" id="eventDate" class="form-control" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Registration Deadline</label>
+              <input type="date" name="registration_deadline" id="eventDeadline" class="form-control"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Start Time <span style="color:var(--accent-red)">*</span></label>
+              <input type="time" name="start_time" id="eventStartTime" class="form-control" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">End Time <span style="color:var(--accent-red)">*</span></label>
+              <input type="time" name="end_time" id="eventEndTime" class="form-control" required/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Venue <span style="color:var(--accent-red)">*</span></label>
+              <input type="text" name="venue" id="eventVenue" class="form-control" placeholder="e.g. Auditorium / Lab 3 / Seminar Hall" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Capacity (Max Seats) <span style="color:var(--accent-red)">*</span></label>
+              <input type="number" name="capacity" id="eventCapacity" class="form-control" value="100" min="1" required/>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Banner Image (optional)</label>
+            <div class="file-upload-zone" id="bannerZone" onclick="document.getElementById('bannerImageInput').click()">
+              <i class="fa-solid fa-image fa-2x" style="color:var(--text-muted);"></i>
+              <p id="bannerLabel">Click or drag banner image here (JPG, PNG, WebP)</p>
+              <input type="file" name="banner_image" id="bannerImageInput" accept="image/*" style="display:none;" onchange="previewImage(this,'bannerPreview','bannerLabel')"/>
+            </div>
+            <img id="bannerPreview" src="" alt="" style="display:none;max-height:160px;border-radius:8px;margin-top:12px;object-fit:cover;"/>
+          </div>
+
+          <div class="form-group" style="margin-top:16px;">
+            <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" name="is_published" value="1" checked style="width:18px;height:18px;accent-color:var(--accent-red);"/>
+              <span style="font-weight:600;">Publish immediately</span>
+              <span class="text-muted" style="font-size:0.82rem;">(Event will be instantly visible to students on the events portal)</span>
+            </label>
+          </div>
+
+          <div class="form-row form-footer mt-4">
+            <button type="button" class="btn btn-outline" onclick="goToStep1()"><i class="fa-solid fa-arrow-left"></i> Back to Step 1</button>
+            <button type="button" class="btn btn-primary btn-lg" id="submitStep2Btn" onclick="handleStep2Next()">
+              <i class="fa-solid fa-calendar-check"></i> Create Event
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Sub-Events (Symposium only) -->
+      <div class="form-step hidden" id="formStep3">
+        <div class="section-card animate-fadeInUp">
+          <div class="section-header">
+            <h3><i class="fa-solid fa-list-check"></i> Configure Sub-Events <span class="text-muted" style="font-size:0.85rem;">(Symposium Contests)</span></h3>
+          </div>
+          <div id="subEventsList">
+            <div class="sub-event-row" data-index="0">
+              <div class="sub-event-header">
+                <span>Sub-Event 1</span>
+                <button type="button" class="btn-icon-danger" onclick="removeSubEvent(this)" style="display:none;"><i class="fa-solid fa-trash"></i></button>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Sub-Event Name <span style="color:var(--accent-red)">*</span></label>
+                  <input type="text" name="sub_event_name[]" class="form-control" placeholder="e.g. Paper Presentation / Code Debugging" value="Paper Presentation"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Allowed Teams</label>
+                  <input type="number" name="sub_event_allowed_teams[]" class="form-control" value="20" min="1"/>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Min Team Size</label>
+                  <input type="number" name="sub_event_min_team[]" class="form-control" value="1" min="1"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Max Team Size</label>
+                  <input type="number" name="sub_event_max_team[]" class="form-control" value="4" min="1"/>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Sub-Event Venue</label>
+                  <input type="text" name="sub_event_venue[]" class="form-control" placeholder="e.g. Lab 2 / Seminar Hall"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Description / Guidelines</label>
+                  <input type="text" name="sub_event_desc[]" class="form-control" placeholder="Brief rules, timing, topics"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm mt-2" onclick="addSubEvent()">
+            <i class="fa-solid fa-plus"></i> Add Another Sub-Event
+          </button>
+          <div class="form-row form-footer mt-4">
+            <button type="button" class="btn btn-outline" onclick="goToStep2()"><i class="fa-solid fa-arrow-left"></i> Back to Details</button>
+            <button type="button" class="btn btn-primary btn-lg" id="submitStep3Btn" onclick="submitSymposiumForm()">
+              <i class="fa-solid fa-calendar-check"></i> Create Symposium &amp; Sub-Events
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </main>
+</div>
+
+<script>
+let currentStep = 1;
+let subEventCount = 1;
+
+function getSelectedEventType() {
+  const checked = document.querySelector('input[name="event_type"]:checked');
+  return checked ? checked.value : 'workshop';
+}
+
+function onEventTypeChange(type) {
+  const customWrap = document.getElementById('customEventTypeWrap');
+  if (customWrap) customWrap.hidden = type !== 'other';
+  const badge = document.getElementById('selectedTypeBadge');
+  const btn2 = document.getElementById('submitStep2Btn');
+  const step3Ind = document.getElementById('step-ind-3');
+  const step3Line = document.getElementById('step-line-3');
+
+  badge.className = 'badge badge-' + type;
+  badge.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+
+  if (type === 'symposium') {
+    step3Ind.style.display = '';
+    step3Line.style.display = '';
+    btn2.innerHTML = 'Next: Configure Sub-Events <i class="fa-solid fa-arrow-right"></i>';
+  } else {
+    step3Ind.style.display = 'none';
+    step3Line.style.display = 'none';
+    btn2.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Create Event';
+  }
+}
+
+function goToStep1() {
+  document.getElementById('formStep2').classList.add('hidden');
+  document.getElementById('formStep3').classList.add('hidden');
+  document.getElementById('formStep1').classList.remove('hidden');
+
+  document.getElementById('step-ind-1').classList.add('active');
+  document.getElementById('step-ind-2').classList.remove('active');
+  document.getElementById('step-ind-3').classList.remove('active');
+  currentStep = 1;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goToStep2() {
+  const type = getSelectedEventType();
+  onEventTypeChange(type);
+
+  document.getElementById('formStep1').classList.add('hidden');
+  document.getElementById('formStep3').classList.add('hidden');
+  document.getElementById('formStep2').classList.remove('hidden');
+
+  document.getElementById('step-ind-1').classList.remove('active');
+  document.getElementById('step-ind-1').classList.add('done');
+  document.getElementById('step-ind-2').classList.add('active');
+  document.getElementById('step-ind-3').classList.remove('active');
+  currentStep = 2;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateStep2() {
+  const title = document.getElementById('eventTitle').value.trim();
+  const date = document.getElementById('eventDate').value.trim();
+  const start = document.getElementById('eventStartTime').value.trim();
+  const end = document.getElementById('eventEndTime').value.trim();
+  const venue = document.getElementById('eventVenue').value.trim();
+  const capacity = document.getElementById('eventCapacity').value.trim();
+
+  if (!title) {
+    alert('Please enter an Event Title.');
+    document.getElementById('eventTitle').focus();
+    return false;
+  }
+  if (!date) {
+    alert('Please select an Event Date.');
+    document.getElementById('eventDate').focus();
+    return false;
+  }
+  if (!start) {
+    alert('Please enter a Start Time.');
+    document.getElementById('eventStartTime').focus();
+    return false;
+  }
+  if (!end) {
+    alert('Please enter an End Time.');
+    document.getElementById('eventEndTime').focus();
+    return false;
+  }
+  if (!venue) {
+    alert('Please enter a Venue.');
+    document.getElementById('eventVenue').focus();
+    return false;
+  }
+  if (!capacity || parseInt(capacity) < 1) {
+    alert('Please enter a valid Capacity (seats).');
+    document.getElementById('eventCapacity').focus();
+    return false;
+  }
+  return true;
+}
+
+function handleStep2Next() {
+  if (!validateStep2()) return;
+
+  const type = getSelectedEventType();
+  if (type === 'symposium') {
+    // Go to step 3
+    document.getElementById('formStep2').classList.add('hidden');
+    document.getElementById('formStep3').classList.remove('hidden');
+
+    document.getElementById('step-ind-2').classList.remove('active');
+    document.getElementById('step-ind-2').classList.add('done');
+    document.getElementById('step-ind-3').classList.add('active');
+    currentStep = 3;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    // Submit the form!
+    submitFormNow('submitStep2Btn');
+  }
+}
+
+function submitSymposiumForm() {
+  // Validate at least one sub-event has a name
+  const names = document.querySelectorAll('input[name="sub_event_name[]"]');
+  let hasName = false;
+  names.forEach(inp => { if (inp.value.trim()) hasName = true; });
+  if (!hasName) {
+    alert('Please enter at least one Sub-Event name for this symposium.');
+    return;
+  }
+  submitFormNow('submitStep3Btn');
+}
+
+function submitFormNow(buttonId) {
+  const btn = document.getElementById(buttonId);
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Event...';
+  }
+  document.getElementById('createEventForm').submit();
+}
+
+function addSubEvent() {
+  subEventCount++;
+  const list = document.getElementById('subEventsList');
+  const tpl = document.querySelector('.sub-event-row').cloneNode(true);
+  tpl.dataset.index = subEventCount - 1;
+  tpl.querySelector('.sub-event-header span').textContent = 'Sub-Event ' + subEventCount;
+  tpl.querySelector('.btn-icon-danger').style.display = '';
+  tpl.querySelectorAll('input').forEach(i => {
+    if (i.name.includes('name')) i.value = '';
+    else if (i.name.includes('desc') || i.name.includes('venue')) i.value = '';
+    else if (i.name.includes('allowed')) i.value = '20';
+    else if (i.name.includes('min')) i.value = '1';
+    else if (i.name.includes('max')) i.value = '4';
+  });
+  list.appendChild(tpl);
+}
+
+function removeSubEvent(btn) {
+  btn.closest('.sub-event-row').remove();
+}
+
+function previewImage(input, previewId, labelId) {
+  const preview = document.getElementById(previewId);
+  const label = document.getElementById(labelId);
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    if (label) label.textContent = 'Selected: ' + file.name;
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// Initialise on load
+document.addEventListener('DOMContentLoaded', () => {
+  onEventTypeChange(getSelectedEventType());
+});
+</script>
+{% endblock %}

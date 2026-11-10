@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Manage Events – Admin{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="sidebar" id="adminSidebar">
+    <div class="sidebar-header"><img class="college-logo sidebar-college-logo" src="{{ url_for('static', filename='images/ms-college-logo.png') }}" alt="MS College"><div><div style="font-weight:700;font-size:0.95rem;">MS College</div><div style="font-size:0.75rem;color:var(--text-muted);">Admin Panel</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="{{ url_for('admin.create_event') }}" class="sidebar-link"><i class="fa-solid fa-calendar-plus"></i><span>Create Event</span></a>
+      <a href="{{ url_for('admin.events_list') }}" class="sidebar-link active"><i class="fa-solid fa-calendar-days"></i><span>Manage Events</span></a>
+      <a href="{{ url_for('admin.staff_requests') }}" class="sidebar-link"><i class="fa-solid fa-user-check"></i><span>Staff Requests</span></a>
+      <a href="{{ url_for('admin.reports') }}" class="sidebar-link"><i class="fa-solid fa-file-chart-column"></i><span>Reports</span></a>
+      <div class="sidebar-divider"></div>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link sidebar-link-danger"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+      <div><h1 class="page-title">Manage Events</h1><p class="page-sub">View, edit, publish and delete events</p></div>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <a href="{{ url_for('admin.create_event') }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> New Event</a>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="section-card animate-fadeInUp">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label class="filter-label">Type</label>
+          <select class="form-control form-select" id="filterType" onchange="filterEvents()">
+            <option value="">All Types</option>
+            <option value="workshop">Workshop</option>
+            <option value="seminar">Seminar</option>
+            <option value="symposium">Symposium</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Status</label>
+          <select class="form-control form-select" id="filterStatus" onchange="filterEvents()">
+            <option value="">All Status</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="filter-group" style="flex:1;">
+          <label class="filter-label">Search</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-magnifying-glass input-icon"></i>
+            <input type="text" class="form-control" id="searchInput" placeholder="Search events..." oninput="filterEvents()"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card animate-fadeInUp animate-stagger-1">
+      {% if events %}
+      <div class="table-wrap">
+        <table class="data-table" id="eventsTable">
+          <thead>
+            <tr>
+              <th>#</th><th>Title</th><th>Type</th><th>Date</th><th>Venue</th><th>Status</th><th>Published</th><th>Registrations</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ev in events %}
+            <tr data-type="{{ ev.event_type }}" data-status="{{ ev.status }}" data-title="{{ ev.title|lower }}">
+              <td>{{ loop.index }}</td>
+              <td><strong>{{ ev.title }}</strong></td>
+              <td><span class="badge badge-{{ ev.event_type }}">{{ ev.event_type|capitalize }}</span></td>
+              <td>{{ ev.event_date }}</td>
+              <td>{{ ev.venue }}</td>
+              <td><span class="badge badge-{{ ev.status }}">{{ ev.status|capitalize }}</span></td>
+              <td>
+                <form method="POST" action="{{ url_for('admin.toggle_publish', event_id=ev.id) }}" style="display:inline;">
+                  <button type="submit" class="toggle-btn {% if ev.is_published %}toggle-on{% else %}toggle-off{% endif %}" title="{{ 'Unpublish' if ev.is_published else 'Publish' }}">
+                    <span class="toggle-thumb"></span>
+                  </button>
+                </form>
+              </td>
+              <td>
+                <a href="{{ url_for('admin.event_registrations', event_id=ev.id) }}" class="stat-pill">{{ ev.reg_count }} registered</a>
+              </td>
+              <td>
+                <div style="display:flex;gap:4px;">
+                  <a href="{{ url_for('admin.event_registrations', event_id=ev.id) }}" class="btn-icon" title="Registrations"><i class="fa-solid fa-users"></i></a>
+                  <a href="{{ url_for('admin.assign_staff', event_id=ev.id) }}" class="btn-icon" title="Assign Staff"><i class="fa-solid fa-user-tie"></i></a>
+                  <a href="{{ url_for('admin.edit_event', event_id=ev.id) }}" class="btn-icon" title="Edit"><i class="fa-solid fa-pen"></i></a>
+                  <form method="POST" action="{{ url_for('admin.delete_event', event_id=ev.id) }}" style="display:inline;" onsubmit="return confirm('Delete this event?')">
+                    <button type="submit" class="btn-icon btn-icon-danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fa-solid fa-calendar-xmark"></i>
+        <p>No events found. Create your first event!</p>
+        <a href="{{ url_for('admin.create_event') }}" class="btn btn-primary">Create Event</a>
+      </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+<script>
+function filterEvents() {
+  const type = document.getElementById('filterType').value;
+  const status = document.getElementById('filterStatus').value;
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#eventsTable tbody tr').forEach(row => {
+    const matchType = !type || row.dataset.type === type;
+    const matchStatus = !status || row.dataset.status === status;
+    const matchSearch = !search || row.dataset.title.includes(search);
+    row.style.display = (matchType && matchStatus && matchSearch) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

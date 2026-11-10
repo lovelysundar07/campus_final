@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.py[cod]
+.env
+static/uploads/*
+!static/uploads/banners/
+!static/uploads/certificates/
+!static/uploads/ppts/
+!static/uploads/reports/
+!static/uploads/banners/.gitkeep
+!static/uploads/certificates/.gitkeep
+!static/uploads/ppts/.gitkeep
+!static/uploads/reports/.gitkeep

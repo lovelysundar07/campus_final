@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Registrations – {{ event.title }}{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="sidebar" id="adminSidebar">
+    <div class="sidebar-header"><img class="college-logo sidebar-college-logo" src="{{ url_for('static', filename='images/ms-college-logo.png') }}" alt="MS College"><div><div style="font-weight:700;font-size:0.95rem;">MS College</div><div style="font-size:0.75rem;color:var(--text-muted);">Admin Panel</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="{{ url_for('admin.create_event') }}" class="sidebar-link"><i class="fa-solid fa-calendar-plus"></i><span>Create Event</span></a>
+      <a href="{{ url_for('admin.events_list') }}" class="sidebar-link active"><i class="fa-solid fa-calendar-days"></i><span>Manage Events</span></a>
+      <a href="{{ url_for('admin.staff_requests') }}" class="sidebar-link"><i class="fa-solid fa-user-check"></i><span>Staff Requests</span></a>
+      <a href="{{ url_for('admin.reports') }}" class="sidebar-link"><i class="fa-solid fa-file-chart-column"></i><span>Reports</span></a>
+      <div class="sidebar-divider"></div>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link sidebar-link-danger"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+      <div>
+        <h1 class="page-title">{{ event.title }}</h1>
+        <p class="page-sub">
+          <span class="badge badge-{{ event.event_type }}">{{ event.event_type|capitalize }}</span>
+          {{ event.event_date }} | {{ event.venue }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-grid stats-grid-sm animate-fadeInUp">
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(230,57,70,0.15);color:var(--accent-red);"><i class="fa-solid fa-users"></i></div><div class="stat-body"><div class="stat-num">{{ registrations|length }}</div><div class="stat-label">Registered</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(46,204,113,0.15);color:#2ecc71;"><i class="fa-solid fa-circle-check"></i></div><div class="stat-body"><div class="stat-num">{{ registrations|selectattr('attendance_status','eq','present')|list|length }}</div><div class="stat-label">Present</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(243,156,18,0.15);color:#f39c12;"><i class="fa-solid fa-certificate"></i></div><div class="stat-body"><div class="stat-num">{{ registrations|selectattr('certificate_issued')|list|length }}</div><div class="stat-label">Certificates Issued</div></div></div>
+    </div>
+
+    <!-- Issue Certificates Form -->
+    <div class="section-card animate-fadeInUp animate-stagger-1">
+      <div class="section-header">
+        <h3><i class="fa-solid fa-users"></i> Participants <span class="text-muted" style="font-size:0.85rem;">({{ registrations|length }} total)</span></h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="selectAll()"><i class="fa-solid fa-check-double"></i> Select All</button>
+        </div>
+      </div>
+
+      <form method="POST" action="{{ url_for('admin.issue_certificates') }}" id="certForm">
+        <input type="hidden" name="event_id" value="{{ event.id }}"/>
+        {% if registrations %}
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="checkAll" onchange="toggleAll(this)"/></th>
+                <th>#</th><th>Name</th><th>Roll No</th><th>Dept</th><th>Year</th>
+                {% if event.event_type == 'symposium' %}<th>Sub-Event</th><th>Team</th>{% endif %}
+                {% if event.event_type == 'seminar' %}<th>PPT</th>{% endif %}
+                <th>Attendance</th><th>Certificate</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for reg in registrations %}
+              <tr>
+                <td><input type="checkbox" name="registration_ids" value="{{ reg.id }}" {% if reg.certificate_issued %}disabled{% endif %} class="reg-check"/></td>
+                <td>{{ loop.index }}</td>
+                <td><strong>{{ reg.user_name }}</strong></td>
+                <td>{{ reg.roll_no }}</td>
+                <td>{{ reg.dept }}</td>
+                <td>{{ reg.section }}</td>
+                {% if event.event_type == 'symposium' %}
+                <td>{{ reg.sub_event_name or '—' }}</td>
+                <td>{{ reg.team_name or '—' }}</td>
+                {% endif %}
+                {% if event.event_type == 'seminar' %}
+                <td>
+                  {% if reg.ppt_file_path %}
+                  <a href="{{ url_for('static', filename='uploads/ppts/' + reg.ppt_file_path.split('/')[-1]) }}" target="_blank" class="btn-icon" title="Download PPT">
+                    <i class="fa-solid fa-file-powerpoint"></i>
+                  </a>
+                  {% else %}<span class="text-muted">—</span>{% endif %}
+                </td>
+                {% endif %}
+                <td><span class="badge badge-{{ reg.attendance_status }}">{{ reg.attendance_status|capitalize }}</span></td>
+                <td>
+                  {% if reg.certificate_issued %}
+                    <span class="badge badge-success"><i class="fa-solid fa-certificate"></i> Issued</span>
+                  {% else %}
+                    <span class="badge badge-pending">Pending</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="form-footer mt-3">
+          <button type="submit" class="btn btn-primary" onclick="return confirmIssue()">
+            <i class="fa-solid fa-certificate"></i> Issue Certificates to Selected
+          </button>
+        </div>
+        {% else %}
+        <div class="empty-state"><i class="fa-solid fa-users-slash"></i><p>No registrations yet for this event.</p></div>
+        {% endif %}
+      </form>
+    </div>
+  </main>
+</div>
+<script>
+function toggleAll(cb) { document.querySelectorAll('.reg-check:not(:disabled)').forEach(c => c.checked = cb.checked); }
+function selectAll() { document.querySelectorAll('.reg-check:not(:disabled)').forEach(c => c.checked = true); document.getElementById('checkAll').checked = true; }
+function confirmIssue() {
+  const selected = document.querySelectorAll('.reg-check:checked').length;
+  if (!selected) { alert('Please select at least one participant.'); return false; }
+  return confirm('Issue certificates to ' + selected + ' participant(s)?');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Register – MS College Events{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card animate-fadeInUp">
+    <div class="auth-header">
+      <div class="auth-logo"><img class="college-logo sidebar-college-logo" src="{{ url_for('static', filename='images/ms-college-logo.png') }}" alt="MS College"></div>
+      <h2 data-i18n="auth.register">Create Account</h2>
+      <p class="text-muted" data-i18n="auth.registerSub">Join MS College Events Portal</p>
+    </div>
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('auth.register') }}" class="auth-form" id="registerForm" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" data-i18n="form.name">Full Name</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-user input-icon"></i>
+            <input type="text" name="name" class="form-control" placeholder="Enter your full name" required autocomplete="name" value="{{ request.form.get('name','') }}"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="form.rollNo">Roll Number</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-id-badge input-icon"></i>
+            <input type="text" name="roll_no" class="form-control" placeholder="e.g. 22CSB001" required value="{{ request.form.get('roll_no','') }}"/>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" data-i18n="form.dept">Department</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-building-columns input-icon"></i>
+            <select name="dept" class="form-control form-select" required>
+              <option value="">Select Department</option>
+              {% for d in ['Computer Science (CS)','Information Technology (IT)','Computer Applications (BCA)','Microbiology','Botany','Physics','Mathematics','Tamil','English','Physical Education','Other'] %}
+              <option value="{{ d }}" {% if request.form.get('dept')==d %}selected{% endif %}>{{ d }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Year of Study</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-layer-group input-icon"></i>
+            <select name="year_of_study" class="form-control form-select" required>
+              <option value="">Select Year</option>
+              {% for y in ['First Year','Second Year','Third Year'] %}
+              <option value="{{ y }}" {% if request.form.get('year_of_study')==y %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" data-i18n="form.email">Email Address</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" name="email" class="form-control" placeholder="your@email.com" required autocomplete="email" value="{{ request.form.get('email','') }}"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="form.phone">Phone Number</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-phone input-icon"></i>
+            <input type="tel" name="phone" class="form-control" placeholder="10-digit mobile" maxlength="15" value="{{ request.form.get('phone','') }}"/>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" data-i18n="form.password">Password</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" name="password" id="password" class="form-control" placeholder="Min 6 characters" required autocomplete="new-password"/>
+            <button type="button" class="input-eye" onclick="togglePwd('password')"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="Re-enter password" required autocomplete="new-password"/>
+            <button type="button" class="input-eye" onclick="togglePwd('confirm_password')"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group profile-upload-field">
+        <label class="form-label">Profile picture (optional)</label>
+        <input type="file" name="profile_image" class="form-control" accept=".png,.jpg,.jpeg,.webp" />
+        <small class="text-muted">PNG, JPG, JPEG or WEBP. You can change it later in My Profile.</small>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full btn-lg mt-2" data-i18n="auth.register">
+        <i class="fa-solid fa-user-plus"></i> Create Account
+      </button>
+    </form>
+    <div class="auth-footer">
+      <span data-i18n="auth.alreadyHaveAccount">Already have an account?</span>
+      <a href="{{ url_for('auth.login') }}" class="text-accent" data-i18n="auth.login">Login</a>
+    </div>
+  </div>
+</div>
+<script>
+function togglePwd(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
+</script>
+{% endblock %}

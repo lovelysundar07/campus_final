@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Staff Register – MS College Events{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card animate-fadeInUp" style="max-width:560px;">
+    <div class="auth-header">
+      <div class="auth-logo"><i class="fa-solid fa-chalkboard-user" style="color:var(--accent-red);font-size:2rem;"></i></div>
+      <h2>Staff Registration</h2>
+      <p class="text-muted">Register as Incharge Staff – pending admin approval</p>
+    </div>
+    <div class="alert alert-info mb-3" style="background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.3);border-radius:8px;padding:12px 16px;color:#3498db;font-size:0.9rem;">
+      <i class="fa-solid fa-circle-info"></i>
+      Your registration will be reviewed by the admin before you can log in.
+    </div>
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('auth.staff_register') }}" class="auth-form" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-user input-icon"></i>
+            <input type="text" name="name" class="form-control" placeholder="Your full name" required value="{{ request.form.get('name','') }}"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" name="email" class="form-control" placeholder="staff@msvcollege.ac.in" required value="{{ request.form.get('email','') }}"/>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-phone input-icon"></i>
+            <input type="tel" name="phone" class="form-control" placeholder="10-digit mobile" value="{{ request.form.get('phone','') }}"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Designation</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-briefcase input-icon"></i>
+            <input type="text" name="designation" class="form-control" placeholder="e.g. Assistant Professor" required value="{{ request.form.get('designation','') }}"/>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Department</label>
+        <div class="input-icon-wrap">
+          <i class="fa-solid fa-building-columns input-icon"></i>
+          <select name="department" class="form-control form-select" required>
+            <option value="">Select Department</option>
+            {% for d in ['Computer Science','Information Technology','Computer Applications','Microbiology','Botany','Physics','Mathematics','Tamil','English','Physical Education','Administration','Library'] %}
+            <option value="{{ d }}" {% if request.form.get('department')==d %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" name="password" id="spwd" class="form-control" placeholder="Min 6 characters" required/>
+            <button type="button" class="input-eye" onclick="togglePwd('spwd')"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <div class="input-icon-wrap">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" name="confirm_password" id="spwd2" class="form-control" placeholder="Re-enter password" required/>
+            <button type="button" class="input-eye" onclick="togglePwd('spwd2')"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group profile-upload-field">
+        <label class="form-label">Profile picture (optional)</label>
+        <input type="file" name="profile_image" class="form-control" accept=".png,.jpg,.jpeg,.webp" />
+        <small class="text-muted">PNG, JPG, JPEG or WEBP. You can change it later in My Profile.</small>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full btn-lg mt-2">
+        <i class="fa-solid fa-paper-plane"></i> Submit for Approval
+      </button>
+    </form>
+    <div class="auth-footer">
+      <span>Already approved?</span>
+      <a href="{{ url_for('auth.login') }}" class="text-accent">Login here</a>
+    </div>
+  </div>
+</div>
+<script>function togglePwd(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}</script>
+{% endblock %}

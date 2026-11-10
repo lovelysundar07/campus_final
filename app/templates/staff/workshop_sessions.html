@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Daily Attendance – {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container page-wrapper" style="max-width:1200px;padding-top:110px;padding-bottom:50px;">
+  <div class="section-card">
+    <div class="section-header">
+      <div><h1 class="page-title">Daily Workshop Attendance</h1><p class="text-muted">{{ event.title }} · {{ event.venue }}</p></div>
+      <a class="btn btn-outline" href="{{ url_for('staff.event_detail', event_id=event.id) }}">Back to Event</a>
+    </div>
+    <form method="post" class="section-card" style="margin-bottom:24px;">
+      <h3>Create Workshop Session</h3>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Session Date</label><input class="form-control" type="date" name="session_date" required></div>
+        <div class="form-group"><label class="form-label">Session Name</label><input class="form-control" name="session_title" placeholder="Day 1 / Morning Session" required></div>
+      </div>
+      <button class="btn btn-primary" type="submit">Create Session</button>
+    </form>
+    {% if sessions %}
+      {% for ws in sessions %}
+      <div class="section-card" style="margin-bottom:18px;">
+        <div class="section-header"><div><h3>{{ ws.session_title }}</h3><p class="text-muted">{{ ws.session_date }}</p></div></div>
+        {% if participants %}
+        <form method="post" action="{{ url_for('staff.save_session_attendance', session_id=ws.id) }}">
+          <p class="text-muted">Tick each participant who was present. Unticked participants are saved as absent.</p>
+          <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>#</th><th>Name</th><th>Roll No</th><th>Department</th><th>Year</th><th>Present</th></tr></thead>
+            <tbody>
+              {% for p in participants %}
+              <tr><td>{{ loop.index }}</td><td>{{ p.name }}</td><td>{{ p.roll_no }}</td><td>{{ p.dept }}</td><td>{{ p.section }}</td>
+                <td><input type="checkbox" name="present_registration_ids" value="{{ p.registration_id }}" {% if ws.attendance.get(p.registration_id)=='present' %}checked{% endif %} aria-label="Present"></td></tr>
+              {% endfor %}
+            </tbody>
+          </table></div>
+          <button class="btn btn-primary mt-3" type="submit">Save Attendance</button>
+        </form>
+        {% else %}<p class="text-muted">No registered participants for this event yet.</p>{% endif %}
+      </div>
+      {% endfor %}
+    {% else %}<div class="empty-state"><i class="fa-solid fa-calendar-day fa-2x"></i><p>No workshop sessions created yet.</p></div>{% endif %}
+  </div>
+</div>
+{% endblock %}
